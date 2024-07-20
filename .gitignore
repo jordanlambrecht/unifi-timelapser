@@ -1,2 +1,4 @@
 .env
 /unifi-timelapser
+/.unifi-timelapser
+.DS_STORE
