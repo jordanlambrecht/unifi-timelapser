@@ -10,8 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+    
     - name: Checkout repository
       uses: actions/checkout@v2
+
+    - name: Get the latest tag
+      id: get_latest_tag
+      run: echo ::set-output name=tag::$(git describe --tags `git rev-list --tags --max-count=1`)
+
+    - name: Calculate new tag
+      id: new_tag
+      run: |
+        latest_tag=${{ steps.get_latest_tag.outputs.tag }}
+        echo "Latest tag: $latest_tag"
+        if [ -z "$latest_tag" ]; then
+          new_tag="v1.0.0"
+        else
+          IFS='.' read -r -a parts <<< "${latest_tag/v/}"
+          major=${parts[0]}
+          minor=${parts[1]}
+          patch=${parts[2]}
+          patch=$((patch+1))
+          new_tag="v$major.$minor.$patch"
+        fi
+        echo "New tag: $new_tag"
+        echo ::set-output name=new_tag::$new_tag
+
+    - name: Create new tag
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git tag ${{ steps.new_tag.outputs.new_tag }}
+        git push origin ${{ steps.new_tag.outputs.new_tag }}
 
     - name: Set up Docker Buildx
       uses: docker/setup-buildx-action@v1
