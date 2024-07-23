@@ -8,9 +8,10 @@ services:
       - ./unifi-timelapser/logs:/logs
     restart: unless-stopped
     environment:
+      TZ: America/Chicago
       CAMERA_RTSPS_LIST: ${CAMERA_RTSPS_LIST}
       CAMERA_NAME_LIST: ${CAMERA_NAME_LIST}
-      ROTATION_LIST: left,left  # Options: none, left, right, invert
+      ROTATION_LIST: right,right  # Options: none, left, right, invert
       OUTPUT_DIR: /media
       IMAGE_TYPE: png
       FREQUENCY: 900  # Frequency in seconds (900 seconds :  15 minutes)
@@ -21,7 +22,7 @@ services:
       MAX_TIMELAPSE_SIZE: 0  # Max file size in MB (0 for unlimited)
       TIMELAPSE_FORMAT: mp4
       TIMELAPSE_SPEED: 30  # Frame rate for timelapse in fps
-      MAX_IMAGE_SIZE: 5000  # Max image size in KB (0 for no compression)
+      MAX_IMAGE_SIZE: 0  # Max image size in KB (0 for no compression)
       LOG_LEVEL: INFO  # Log level (DEBUG, INFO, WARNING, ERROR, CRITICAL)
       TIME_START: "00:00"  # Start time in 24-hour format
       TIME_STOP: "00:00"  # Stop time in 24-hour format
