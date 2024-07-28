@@ -27,10 +27,12 @@ jobs:
       run: |
         commit_message="${{ steps.commit_messages.outputs.messages }}"
         echo "Commit message: $commit_message"
-        if [[ "$commit_message" =~ "MAJOR" ]]; then
+        if [[ "$commit_message" =~ "feat!" ]]; then
           echo ::set-output name=increment::major
-        elif [[ "$commit_message" =~ "MINOR" ]]; then
+        elif [[ "$commit_message" =~ "feat:" ]]; then
           echo ::set-output name=increment::minor
+        elif [[ "$commit_message" =~ "fix:" ]]; then
+          echo ::set-output name=increment::patch
         else
           echo ::set-output name=increment::patch
         fi
@@ -63,7 +65,14 @@ jobs:
         echo "New tag: $new_tag"
         echo ::set-output name=new_tag::$new_tag
 
+    - name: Check if tag exists
+      id: check_tag
+      run: |
+        tag_exists=$(git ls-remote --tags origin refs/tags/${{ steps.new_tag.outputs.new_tag }} | wc -l)
+        echo "tag_exists=$tag_exists" >> $GITHUB_ENV
+
     - name: Create new tag
+      if: env.tag_exists == '0'
       env:
         ACTIONS_PAT: ${{ secrets.ACTIONS_PAT }}
       run: |

@@ -134,13 +134,18 @@ def get_rotate_filter(rotate_option):
 
 def capture_image(camera_url, output_dir, prefix, image_type, rotate_option, retries=IMAGE_CAPTURE_RETRIES):
     """Capture an image from a camera URL."""
-    timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     output_path = os.path.join(output_dir, 'frames', f"{prefix}_{timestamp}.{image_type}")
     rotate_filter = get_rotate_filter(rotate_option)
     
     for attempt in range(retries):
         try:
-            ffmpeg_command = ["ffmpeg", "-y", "-i", camera_url, "-vframes", "1"]
+            ffmpeg_command = [
+                "ffmpeg", "-y", "-loglevel", "debug", 
+                "-fflags", "+discardcorrupt", 
+                "-timeout", "10000000",  # Increased timeout
+                "-i", camera_url, "-vframes", "1"
+            ]
             if rotate_filter:
                 ffmpeg_command += ["-vf", rotate_filter]
             ffmpeg_command += [output_path]
@@ -213,19 +218,22 @@ def cleanup_logs(log_dir, days):
 
 def create_timelapse(camera_name, output_dir, frame_rate, rotate_option, checkpoint=False):
     """Create a timelapse video from captured images."""
-    timestamp = datetime.now(timezone).strftime("%Y%m%d_%H%M%S")
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     frames_dir = os.path.join(output_dir, 'frames')
     if checkpoint:
         output_path = os.path.join(output_dir, 'checkpoint_timelapses', f"{camera_name}_timelapse_{timestamp}.{config['TIMELAPSE_FORMAT']}")
     else:
         output_path = os.path.join(output_dir, 'rolling_timelapses', f"{camera_name}_timelapse.{config['TIMELAPSE_FORMAT']}")
 
+    # Updated the image sequence pattern
     input_pattern = os.path.join(frames_dir, f"{camera_name}_*.{config['IMAGE_TYPE']}")
 
+    # Check if frames_dir exists and contains files with the camera_name prefix
     if not os.path.exists(frames_dir) or not any(fname.startswith(f"{camera_name}_") for fname in os.listdir(frames_dir)):
         logger.error(f"No images found for {camera_name}. Skipping timelapse creation.")
         return
 
+    # Remove old timelapse files if not checkpoint
     if not checkpoint:
         rolling_timelapses_dir = os.path.join(output_dir, 'rolling_timelapses')
         for filename in os.listdir(rolling_timelapses_dir):
