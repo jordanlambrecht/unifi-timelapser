@@ -1,0 +1,719 @@
+{% extends "base.html" %} {% block title %}{{ camera.name }} - Camera Details{%
+endblock %} {% block content %}
+<div class="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
+  <!-- Camera Header -->
+  <div class="mb-8">
+    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+      <div class="mb-4 sm:mb-0">
+        <h1 class="text-3xl font-bold text-gray-900 flex items-center">
+          <svg
+            class="w-8 h-8 mr-3 text-{{ camera.status == 'enabled' and 'green' or 'gray' }}-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+            ></path>
+          </svg>
+          {{ camera.name }}
+          <span
+            class="ml-3 inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-{{ camera.status == 'enabled' and 'green' or 'gray' }}-100 text-{{ camera.status == 'enabled' and 'green' or 'gray' }}-800"
+          >
+            {{ camera.status.upper() }}
+          </span>
+        </h1>
+        <p class="mt-1 text-sm text-gray-600">
+          Camera Details and Image History
+        </p>
+      </div>
+      <div class="flex flex-wrap gap-2">
+        <a
+          href="/"
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M15 19l-7-7 7-7"
+            ></path>
+          </svg>
+          Back to Dashboard
+        </a>
+        <button
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          onclick="generateTimelapse('{{ camera.name }}', false)"
+          title="Generate a manual timelapse from current frames"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2h4a1 1 0 110 2h-1v12a2 2 0 01-2 2H6a2 2 0 01-2-2V6H3a1 1 0 110-2h4z"
+            ></path>
+          </svg>
+          Generate Timelapse
+        </button>
+        <button
+          class="inline-flex items-center px-4 py-2 border border-green-300 rounded-md shadow-sm text-sm font-medium text-green-700 bg-green-50 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+          onclick="generateTimelapse('{{ camera.name }}', true)"
+          title="Generate a checkpoint timelapse with timestamp"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M5 13l4 4L19 7"
+            ></path>
+          </svg>
+          Checkpoint
+        </button>
+        <button
+          class="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          onclick="refreshCameraData('{{ camera.name }}')"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            ></path>
+          </svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+    <!-- Camera Status Overview -->
+    <div class="lg:col-span-2">
+      <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <h3
+            class="text-lg leading-6 font-medium text-gray-900 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 mr-2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            Camera Status
+          </h3>
+
+          <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div>
+              <h4
+                class="text-sm font-medium text-gray-500 uppercase tracking-wide"
+              >
+                Basic Information
+              </h4>
+              <dl class="mt-2 space-y-2">
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Camera ID:</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ camera.camera_id }}
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Model:</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ camera.model or 'Unknown' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Resolution:</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ camera.resolution or 'Unknown' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">IP Address:</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ camera.ip_address or 'N/A' }}
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Enabled:</dt>
+                  <dd>
+                    <span
+                      class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-{{ camera.enabled and 'green' or 'gray' }}-100 text-{{ camera.enabled and 'green' or 'gray' }}-800"
+                    >
+                      {{ 'Yes' if camera.enabled else 'No' }}
+                    </span>
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Rotation:</dt>
+                  <dd class="text-sm font-medium text-gray-900">
+                    {{ camera.rotation.title() }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+
+            {% if camera.storage_info %}
+            <div>
+              <h4
+                class="text-sm font-medium text-gray-500 uppercase tracking-wide"
+              >
+                Storage Information
+              </h4>
+              <dl class="mt-2 space-y-2">
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">Total Size:</dt>
+                  <dd class="text-sm font-bold text-gray-900">
+                    {{ camera.storage_info.total_size_mb }} MB
+                  </dd>
+                </div>
+                <div class="flex justify-between">
+                  <dt class="text-sm text-gray-600">File Count:</dt>
+                  <dd class="text-sm font-bold text-gray-900">
+                    {{ camera.storage_info.file_count }}
+                  </dd>
+                </div>
+              </dl>
+            </div>
+            {% endif %}
+          </div>
+
+          {% if camera.last_error %}
+          <div class="mt-6">
+            <div class="rounded-md bg-red-50 p-4">
+              <div class="flex">
+                <div class="flex-shrink-0">
+                  <svg
+                    class="h-5 w-5 text-red-400"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16c-.77.833.192 2.5 1.732 2.5z"
+                    ></path>
+                  </svg>
+                </div>
+                <div class="ml-3">
+                  <h4 class="text-sm font-medium text-red-800">Last Error</h4>
+                  <div class="mt-1 text-sm text-red-700">
+                    <code class="bg-red-100 px-2 py-1 rounded text-xs"
+                      >{{ camera.last_error }}</code
+                    >
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+
+    <!-- Latest Image -->
+    <div class="lg:col-span-1">
+      <div class="bg-white shadow-sm rounded-lg">
+        <div class="px-4 py-5 sm:p-6">
+          <h3
+            class="text-lg leading-6 font-medium text-gray-900 flex items-center"
+          >
+            <svg
+              class="w-5 h-5 mr-2 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+            Latest Image
+          </h3>
+
+          {% if camera.latest_image %}
+          <div class="mt-4">
+            <div class="relative">
+              <img
+                src="/media/{{ camera.latest_image.path }}"
+                alt="Latest from {{ camera.name }}"
+                class="w-full h-48 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                onclick="showImageModal('{{ camera.latest_image.path }}', '{{ camera.name }}')"
+              />
+              <div class="absolute bottom-2 left-2 right-2">
+                <div
+                  class="bg-black bg-opacity-75 text-white text-xs px-2 py-1 rounded"
+                >
+                  {{ camera.latest_image.age }}
+                </div>
+              </div>
+            </div>
+            <div class="mt-3 text-center">
+              <button
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                onclick="testCapture('{{ camera.name }}')"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                Test Capture
+              </button>
+            </div>
+          </div>
+          {% else %}
+          <div class="mt-4 text-center py-8">
+            <svg
+              class="mx-auto h-12 w-12 text-gray-400"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+              ></path>
+            </svg>
+            <p class="mt-2 text-sm text-gray-600">No recent image</p>
+            <div class="mt-3">
+              <button
+                class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                onclick="testCapture('{{ camera.name }}')"
+              >
+                <svg
+                  class="w-4 h-4 mr-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h8m2 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                  ></path>
+                </svg>
+                Test Capture
+              </button>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Images -->
+  <div class="bg-white shadow-sm rounded-lg">
+    <div class="px-4 py-5 sm:p-6">
+      <div class="flex items-center justify-between mb-6">
+        <h3
+          class="text-lg leading-6 font-medium text-gray-900 flex items-center"
+        >
+          <svg
+            class="w-5 h-5 mr-2 text-gray-400"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+            ></path>
+          </svg>
+          Recent Images
+        </h3>
+        <button
+          class="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          onclick="loadMoreImages('{{ camera.name }}')"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+            ></path>
+          </svg>
+          Refresh
+        </button>
+      </div>
+
+      {% if camera.recent_images %}
+      <div
+        class="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg"
+        id="recent-images"
+      >
+        <table class="min-w-full divide-y divide-gray-300">
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Preview
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+              >
+                Filename
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Age
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-24"
+              >
+                Size
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            {% for image in camera.recent_images %}
+            <tr class="hover:bg-gray-50">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <img
+                  src="/media/{{ image.path }}"
+                  class="h-16 w-24 object-cover rounded-lg shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+                  alt="Image from {{ camera.name }}"
+                  onclick="showImageModal('{{ image.path }}', '{{ camera.name }}')"
+                />
+              </td>
+              <td class="px-6 py-4">
+                <div class="text-sm font-medium text-gray-900">
+                  {{ image.filename }}
+                </div>
+                <div class="text-sm text-gray-500">{{ image.path }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                >
+                  {{ image.age }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                {{ image.size_mb }} MB
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex space-x-2">
+                  <button
+                    class="inline-flex items-center p-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    onclick="showImageModal('{{ image.path }}', '{{ camera.name }}')"
+                    title="View full size"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      ></path>
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      ></path>
+                    </svg>
+                  </button>
+                  <a
+                    class="inline-flex items-center p-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    href="/media/{{ image.path }}"
+                    download="{{ image.filename }}"
+                    title="Download image"
+                  >
+                    <svg
+                      class="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      ></path>
+                    </svg>
+                  </a>
+                </div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      {% if camera.recent_images|length >= 20 %}
+      <div class="mt-6 text-center">
+        <button
+          class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+          onclick="loadMoreImages('{{ camera.name }}', 50)"
+        >
+          <svg
+            class="w-4 h-4 mr-2"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 6v6m0 0v6m0-6h6m-6 0H6"
+            ></path>
+          </svg>
+          Load More Images
+        </button>
+      </div>
+      {% endif %} {% else %}
+      <div class="text-center py-12">
+        <svg
+          class="mx-auto h-16 w-16 text-gray-400"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          ></path>
+        </svg>
+        <p class="mt-4 text-lg text-gray-600">
+          No images found for this camera
+        </p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+<!-- Image Modal -->
+<div class="fixed inset-0 z-50 hidden" id="imageModal">
+  <div
+    class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0"
+  >
+    <div
+      class="fixed inset-0 transition-opacity bg-gray-500 bg-opacity-75"
+      onclick="closeImageModal()"
+    ></div>
+
+    <span class="hidden sm:inline-block sm:align-middle sm:h-screen"
+      >&#8203;</span
+    >
+
+    <div
+      class="inline-block overflow-hidden text-left align-bottom transition-all transform bg-white rounded-lg shadow-xl sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full"
+    >
+      <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+        <div class="flex items-center justify-between mb-4">
+          <h3 class="text-lg font-medium text-gray-900" id="imageModalTitle">
+            Image Viewer
+          </h3>
+          <button
+            type="button"
+            class="text-gray-400 hover:text-gray-600"
+            onclick="closeImageModal()"
+          >
+            <svg
+              class="w-6 h-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+        <div class="text-center">
+          <img
+            id="modalImage"
+            class="max-w-full max-h-96 mx-auto rounded-lg shadow-lg"
+          />
+        </div>
+      </div>
+      <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
+        <a
+          id="modalDownloadLink"
+          class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary-600 text-base font-medium text-white hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:ml-3 sm:w-auto sm:text-sm"
+        >
+          Download
+        </a>
+        <button
+          type="button"
+          class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm"
+          onclick="closeImageModal()"
+        >
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_javascript %}
+<script>
+  // Image modal functions
+  function showImageModal(imagePath, cameraName) {
+    const modal = document.getElementById("imageModal")
+    const modalImage = document.getElementById("modalImage")
+    const modalTitle = document.getElementById("imageModalTitle")
+    const modalDownloadLink = document.getElementById("modalDownloadLink")
+
+    modalImage.src = "/media/" + imagePath
+    modalTitle.textContent = "Image from " + cameraName
+    modalDownloadLink.href = "/media/" + imagePath
+    modalDownloadLink.download = imagePath.split("/").pop()
+
+    modal.classList.remove("hidden")
+  }
+
+  function closeImageModal() {
+    document.getElementById("imageModal").classList.add("hidden")
+  }
+
+  // Camera functions (reuse from existing implementation)
+  function generateTimelapse(cameraName, isCheckpoint) {
+    const endpoint = isCheckpoint
+      ? "/api/checkpoint-timelapse"
+      : "/api/generate-timelapse"
+
+    fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ camera_name: cameraName }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          alert(
+            isCheckpoint
+              ? "Checkpoint timelapse generation started!"
+              : "Timelapse generation started!"
+          )
+        } else {
+          alert("Error: " + data.message)
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error)
+        alert("An error occurred while starting timelapse generation")
+      })
+  }
+
+  function refreshCameraData(cameraName) {
+    location.reload()
+  }
+
+  function testCapture(cameraName) {
+    fetch("/api/test-capture", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ camera_name: cameraName }),
+    })
+      .then((response) => response.json())
+      .then((data) => {
+        if (data.status === "success") {
+          alert("Test capture successful!")
+          location.reload()
+        } else {
+          alert("Error: " + data.message)
+        }
+      })
+      .catch((error) => {
+        console.error("Error:", error)
+        alert("An error occurred during test capture")
+      })
+  }
+
+  function loadMoreImages(cameraName, limit) {
+    // Implementation for loading more images
+    location.reload()
+  }
+</script>
+{% endblock %}

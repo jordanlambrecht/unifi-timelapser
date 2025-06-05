@@ -1,0 +1,44 @@
+{% extends "base.html" %} {% block title %}Server Error - UniFi Timelapser{%
+endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="text-center py-5">
+      <i
+        class="bi bi-exclamation-circle-fill text-danger"
+        style="font-size: 5rem"
+      ></i>
+      <h1 class="mt-4">500 - Server Error</h1>
+      <p class="text-muted mb-4">
+        Something went wrong on our end. The error has been logged and we're
+        looking into it.
+      </p>
+
+      <div class="alert alert-info text-start">
+        <i class="bi bi-info-circle"></i>
+        <strong>Troubleshooting Tips:</strong>
+        <ul class="mb-0 mt-2">
+          <li>Check if the UniFi Timelapser service is running</li>
+          <li>Verify your configuration file is valid</li>
+          <li>Check the system logs for error details</li>
+          <li>Ensure cameras are accessible</li>
+        </ul>
+      </div>
+
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/" class="btn btn-primary">
+          <i class="bi bi-house"></i> Go to Dashboard
+        </a>
+        <a href="/logs" class="btn btn-outline-warning">
+          <i class="bi bi-journal-text"></i> View Logs
+        </a>
+        <button
+          class="btn btn-outline-secondary"
+          onclick="window.location.reload()"
+        >
+          <i class="bi bi-arrow-clockwise"></i> Try Again
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

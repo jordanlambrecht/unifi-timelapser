@@ -1,4 +1,24 @@
-# requirements.txt
-Flask
-gunicorn
+
+# Core dependencies
+Pillow
+python-dotenv
 pytz
+PyYAML
+opencv-python
+requests
+pydantic
+
+# Web framework - FastAPI (existing)
+fastapi
+uvicorn[standard]
+jinja2
+python-multipart
+aiofiles
+
+# Database dependencies
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+psycopg2-binary>=2.9.0
+asyncpg>=0.29.0
+
+

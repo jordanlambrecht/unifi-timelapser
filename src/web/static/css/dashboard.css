@@ -1,0 +1,414 @@
+/*  Dashboard Styles */
+
+/* Custom variables */
+:root {
+  --camera-card-border: #e0e0e0;
+  --camera-card-hover: #f8f9fa;
+  --status-online: #28a745;
+  --status-offline: #6c757d;
+  --status-error: #dc3545;
+  --status-warning: #ffc107;
+}
+
+/* Global styles */
+body {
+  background-color: #f8f9fa;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+/* Camera cards */
+.camera-card {
+  border: 1px solid var(--camera-card-border);
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.camera-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: var(--camera-card-hover);
+}
+
+.camera-card .card-header {
+  background-color: #fff;
+  border-bottom: 1px solid var(--camera-card-border);
+}
+
+.status-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Image thumbnails */
+.latest-image {
+  max-height: 150px;
+  object-fit: cover;
+  border: 2px solid #dee2e6;
+  transition: border-color 0.3s ease;
+}
+
+.latest-image:hover {
+  border-color: #007bff;
+}
+
+.latest-image-large {
+  border: 3px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.latest-image-large:hover {
+  border-color: #007bff;
+  transform: scale(1.02);
+}
+
+.recent-image-thumb {
+  width: 100%;
+  height: 120px;
+  object-fit: cover;
+  border: 1px solid #dee2e6;
+  transition: all 0.3s ease;
+}
+
+.recent-image-thumb:hover {
+  border-color: #007bff;
+  transform: scale(1.05);
+}
+
+.latest-image-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 0.375rem;
+}
+
+/* Countdown Timer Styles */
+.countdown-timer-container {
+  position: relative;
+  display: inline-block;
+}
+
+.countdown-timer {
+  transform: rotate(-90deg);
+}
+
+.countdown-circle {
+  transition: stroke-dashoffset 1s ease-in-out, stroke 0.3s ease;
+  stroke-linecap: round;
+}
+
+.countdown-text {
+  font-size: 0.9rem;
+}
+
+.countdown-time {
+  font-weight: 600;
+  color: #007bff;
+}
+
+/* Status indicators */
+.status-online {
+  color: var(--status-online) !important;
+}
+
+.status-offline {
+  color: var(--status-offline) !important;
+}
+
+.status-error {
+  color: var(--status-error) !important;
+}
+
+.status-warning {
+  color: var(--status-warning) !important;
+}
+
+/* Health indicators */
+.health-indicator {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+.health-healthy {
+  background-color: var(--status-online);
+  box-shadow: 0 0 5px var(--status-online);
+}
+
+.health-unhealthy {
+  background-color: var(--status-error);
+  box-shadow: 0 0 5px var(--status-error);
+}
+
+/* Navigation */
+.navbar-brand {
+  font-weight: 600;
+  font-size: 1.25rem;
+}
+
+/* Cards */
+.card {
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.card-header {
+  background-color: #fff;
+  border-bottom: 1px solid #e0e0e0;
+  font-weight: 600;
+}
+
+/* Buttons */
+.btn {
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-1px);
+}
+
+/* Tables */
+.table {
+  font-size: 0.9rem;
+}
+
+.table th {
+  font-weight: 600;
+  color: #495057;
+  border-top: none;
+}
+
+.table-sm td,
+.table-sm th {
+  padding: 0.5rem;
+}
+
+/* Log container */
+.log-container {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.85rem;
+  background-color: #f8f9fa;
+}
+
+.log-container .table {
+  margin-bottom: 0;
+}
+
+.log-container .table tr:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+/* Configuration page */
+.config-section {
+  margin-bottom: 2rem;
+}
+
+.config-value {
+  font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+  font-size: 0.9rem;
+  background-color: #f8f9fa;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .camera-card {
+    margin-bottom: 1rem;
+  }
+
+  .latest-image {
+    max-height: 120px;
+  }
+
+  .recent-image-thumb {
+    height: 100px;
+  }
+
+  .navbar-brand {
+    font-size: 1.1rem;
+  }
+
+  .card-body {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .container-fluid {
+    padding: 0.5rem;
+  }
+
+  .card {
+    margin-bottom: 0.75rem;
+  }
+
+  .latest-image {
+    max-height: 100px;
+  }
+
+  .recent-image-thumb {
+    height: 80px;
+  }
+}
+
+/* Loading states */
+.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.loading::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  border: 2px solid #f3f3f3;
+  border-top: 2px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Status badges */
+.badge {
+  font-size: 0.7rem;
+  font-weight: 600;
+}
+
+/* Alert customizations */
+.alert {
+  border: none;
+  border-radius: 0.5rem;
+}
+
+.alert-info {
+  background-color: #e7f3ff;
+  color: #0c5460;
+}
+
+.alert-warning {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.alert-danger {
+  background-color: #f8d7da;
+  color: #721c24;
+}
+
+.alert-success {
+  background-color: #d1e7dd;
+  color: #0f5132;
+}
+
+/* Modal customizations */
+.modal-content {
+  border: none;
+  border-radius: 0.5rem;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  border-bottom: 1px solid #e0e0e0;
+}
+
+.modal-footer {
+  border-top: 1px solid #e0e0e0;
+}
+
+/* Utility classes */
+.text-xs {
+  font-size: 0.75rem;
+}
+
+.text-sm {
+  font-size: 0.875rem;
+}
+
+.fs-xs {
+  font-size: 0.75rem !important;
+}
+
+.fs-sm {
+  font-size: 0.875rem !important;
+}
+
+/* Custom scrollbar */
+.log-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.log-container::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.log-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+/* Animation classes */
+.fade-in {
+  animation: fadeIn 0.5s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.slide-up {
+  animation: slideUp 0.3s ease-out;
+}
+
+@keyframes slideUp {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Tooltip customizations */
+.tooltip {
+  font-size: 0.8rem;
+}
+
+/* Progress bars */
+.progress {
+  height: 8px;
+  border-radius: 4px;
+}
+
+.progress-bar {
+  border-radius: 4px;
+}

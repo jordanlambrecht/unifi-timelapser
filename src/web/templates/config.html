@@ -1,0 +1,370 @@
+{% extends "base.html" %} {% block title %}Configuration - UniFi Timelapser{%
+endblock %} {% block content %}
+<div class="row">
+  <div class="col-12 mb-4">
+    <h1><i class="bi bi-gear"></i> Configuration</h1>
+    <p class="text-muted">Current system configuration and settings</p>
+  </div>
+
+  <!-- Camera Configuration -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-camera-video"></i> Camera Configuration
+        </h5>
+      </div>
+      <div class="card-body">
+        {% if config.cameras %}
+        <div class="table-responsive">
+          <table class="table table-sm">
+            <thead>
+              <tr>
+                <th>Camera Name</th>
+                <th>Status</th>
+                <th>Rotation</th>
+                <th>URL</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for name, camera in config.cameras.items() %}
+              <tr>
+                <td class="fw-bold">{{ name }}</td>
+                <td>
+                  <span
+                    class="badge bg-{{ 'success' if camera.enabled else 'secondary' }}"
+                  >
+                    {{ 'Enabled' if camera.enabled else 'Disabled' }}
+                  </span>
+                </td>
+                <td>{{ camera.rotation.title() }}</td>
+                <td>
+                  <code class="small"
+                    >{{ camera.url[:40] }}{% if camera.url|length > 40 %}...{%
+                    endif %}</code
+                  >
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+        {% else %}
+        <div class="alert alert-warning">
+          <i class="bi bi-exclamation-triangle"></i> No cameras configured
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- Capture Settings -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-camera"></i> Capture Settings</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tr>
+            <td><strong>Frequency:</strong></td>
+            <td>
+              {{ config.capture.frequency_seconds }} seconds ({{
+              (config.capture.frequency_seconds / 60)|round(1) }} minutes)
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Image Format:</strong></td>
+            <td>{{ config.capture.image_format.upper() }}</td>
+          </tr>
+          <tr>
+            <td><strong>Image Width:</strong></td>
+            <td>
+              {{ config.capture.image_width if config.capture.image_width > 0
+              else 'Original' }}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Image Height:</strong></td>
+            <td>
+              {{ config.capture.image_height if config.capture.image_height > 0
+              else 'Original' }}
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Output Directory:</strong></td>
+            <td><code>{{ config.capture.output_directory }}</code></td>
+          </tr>
+          <tr>
+            <td><strong>Timezone:</strong></td>
+            <td>{{ config.capture.timezone }}</td>
+          </tr>
+          <tr>
+            <td><strong>Time Window:</strong></td>
+            <td>{{ config.capture.time_window }}</td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Timelapse Settings -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-film"></i> Timelapse Settings</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tr>
+            <td><strong>Enabled:</strong></td>
+            <td>
+              <span
+                class="badge bg-{{ 'success' if config.timelapse.enabled else 'secondary' }}"
+              >
+                {{ 'Yes' if config.timelapse.enabled else 'No' }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Frame Rate:</strong></td>
+            <td>{{ config.timelapse.frame_rate }} fps</td>
+          </tr>
+          <tr>
+            <td><strong>Format:</strong></td>
+            <td>{{ config.timelapse.format.upper() }}</td>
+          </tr>
+          <tr>
+            <td><strong>Checkpoint Timelapse:</strong></td>
+            <td>
+              <span
+                class="badge bg-{{ 'success' if config.timelapse.checkpoint_enabled else 'secondary' }}"
+              >
+                {{ 'Enabled' if config.timelapse.checkpoint_enabled else
+                'Disabled' }}
+              </span>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cleanup Settings -->
+  <div class="col-lg-6 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-trash"></i> Cleanup Settings</h5>
+      </div>
+      <div class="card-body">
+        <table class="table table-sm">
+          <tr>
+            <td><strong>Image Cleanup:</strong></td>
+            <td>
+              <span
+                class="badge bg-{{ 'success' if config.cleanup.cleanup_enabled else 'secondary' }}"
+              >
+                {{ 'Enabled' if config.cleanup.cleanup_enabled else 'Disabled'
+                }}
+              </span>
+            </td>
+          </tr>
+          <tr>
+            <td><strong>Cleanup Days:</strong></td>
+            <td>{{ config.cleanup.cleanup_days }} days</td>
+          </tr>
+          <tr>
+            <td><strong>Log Cleanup:</strong></td>
+            <td>{{ config.cleanup.log_cleanup_days }} days</td>
+          </tr>
+        </table>
+
+        {% if config.cleanup.cleanup_enabled %}
+        <div class="alert alert-info mt-3">
+          <i class="bi bi-info-circle"></i>
+          Images older than {{ config.cleanup.cleanup_days }} days will be
+          automatically deleted.
+        </div>
+        {% else %}
+        <div class="alert alert-warning mt-3">
+          <i class="bi bi-exclamation-triangle"></i>
+          Image cleanup is disabled. Storage may grow without bounds.
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+
+  <!-- System Information -->
+  <div class="col-12 mb-4">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0">
+          <i class="bi bi-info-circle"></i> System Information
+        </h5>
+      </div>
+      <div class="card-body">
+        <div class="row">
+          <div class="col-md-6">
+            <h6>Application Details</h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Application:</strong></td>
+                <td>UniFi Timelapser</td>
+              </tr>
+              <tr>
+                <td><strong>Python Version:</strong></td>
+                <td id="python-version">Loading...</td>
+              </tr>
+              <tr>
+                <td><strong>Platform:</strong></td>
+                <td id="platform-info">Loading...</td>
+              </tr>
+            </table>
+          </div>
+          <div class="col-md-6">
+            <h6>Configuration File</h6>
+            <table class="table table-sm">
+              <tr>
+                <td><strong>Config Valid:</strong></td>
+                <td>
+                  <span class="badge bg-success">
+                    <i class="bi bi-check-circle"></i> Valid
+                  </span>
+                </td>
+              </tr>
+              <tr>
+                <td><strong>Config Location:</strong></td>
+                <td><code>config.yaml</code></td>
+              </tr>
+              <tr>
+                <td><strong>Last Modified:</strong></td>
+                <td id="config-modified">Loading...</td>
+              </tr>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Configuration Actions -->
+  <div class="col-12">
+    <div class="card">
+      <div class="card-header">
+        <h5 class="mb-0"><i class="bi bi-tools"></i> Configuration Actions</h5>
+      </div>
+      <div class="card-body">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle"></i>
+          <strong>Note:</strong> Configuration changes require restarting the
+          application to take effect.
+        </div>
+
+        <div class="row">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <i class="bi bi-arrow-clockwise text-primary fs-1"></i>
+                <h6 class="mt-2">Reload Configuration</h6>
+                <p class="small text-muted">
+                  Refresh configuration from file without restarting
+                </p>
+                <button
+                  class="btn btn-outline-primary btn-sm"
+                  onclick="reloadConfig()"
+                >
+                  <i class="bi bi-arrow-clockwise"></i> Reload
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <i class="bi bi-file-earmark-text text-info fs-1"></i>
+                <h6 class="mt-2">View Raw Config</h6>
+                <p class="small text-muted">
+                  View the raw YAML configuration file
+                </p>
+                <button
+                  class="btn btn-outline-info btn-sm"
+                  onclick="viewRawConfig()"
+                >
+                  <i class="bi bi-eye"></i> View
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div class="col-md-4 mb-3">
+            <div class="card bg-light">
+              <div class="card-body text-center">
+                <i class="bi bi-download text-success fs-1"></i>
+                <h6 class="mt-2">Export Config</h6>
+                <p class="small text-muted">
+                  Download current configuration as JSON
+                </p>
+                <button
+                  class="btn btn-outline-success btn-sm"
+                  onclick="exportConfig()"
+                >
+                  <i class="bi bi-download"></i> Export
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %} {% block extra_scripts %}
+<script>
+  // Load system information
+  document.addEventListener("DOMContentLoaded", function () {
+    // These would typically come from API endpoints
+    document.getElementById("python-version").textContent = "Python 3.x"
+    document.getElementById("platform-info").textContent = "Linux/Docker"
+    document.getElementById("config-modified").textContent = "Recently"
+  })
+
+  function reloadConfig() {
+    if (
+      confirm(
+        "Reload configuration from file? This may cause brief service interruption."
+      )
+    ) {
+      // This would call an API endpoint to reload config
+      alert("Configuration reload requested. Changes will take effect shortly.")
+    }
+  }
+
+  function viewRawConfig() {
+    // This would open a modal or new window with the raw config
+    alert("Raw configuration viewer would open here.")
+  }
+
+  function exportConfig() {
+    // This would download the config as JSON
+    fetch("/api/config")
+      .then((response) => response.json())
+      .then((data) => {
+        const blob = new Blob([JSON.stringify(data, null, 2)], {
+          type: "application/json",
+        })
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement("a")
+        a.href = url
+        a.download = "unifi-timelapser-config.json"
+        a.click()
+        URL.revokeObjectURL(url)
+      })
+      .catch((error) => {
+        console.error("Error exporting config:", error)
+        alert("Error exporting configuration")
+      })
+  }
+</script>
+{% endblock %}

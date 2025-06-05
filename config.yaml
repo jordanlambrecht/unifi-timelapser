@@ -1,0 +1,84 @@
+cameras:
+  - name: "bullet"
+    url: "rtsps://192.168.1.88:7441/nVt8yHIghbJ6bYGN?enableSrtp"
+    enabled: true
+    rotation: "left"
+  - name: "g3"
+    url: "rtsps://192.168.1.88:7441/J3Nr1kaFfH14ol1Y?enableSrtp"
+    enabled: true
+    rotation: "left"
+
+# Image capture and processing settings
+image_settings:
+  image_type: "jpg"
+  image_width: 1920 # 0 for original resolution
+  image_height: 1080 # 0 for original resolution
+  image_compression_quality: 75 # JPEG quality (1-100)
+  image_compress_quality_step: 5 # Quality reduction step during compression
+  max_image_size: 500 # Max size in KB (0 for no compression)
+  image_capture_retries: 3 # Number of retry attempts
+  image_capture_sleep: 5 # Sleep between retries in seconds
+
+# Timelapse creation settings
+timelapse_settings:
+  timelapse_enabled: true # Enable continuous timelapse generation
+  checkpoint_enabled: true # Enable daily checkpoint timelapses
+  timelapse_generation_frequency: 3600 # Generate timelapse every N seconds (default: 1 hour)
+  timelapse_generation_mode: "periodic" # Options: "every_capture", "periodic", "manual_only"
+  max_timelapse_size: 0 # Max continuous timelapse size in MB (0 unlimited)
+  timelapse_format: "mp4" # Video format (mp4, mov, webm)
+  timelapse_speed: 30 # Frame rate in fps
+  timelapse_max_images: 0 # Max images to include (0 unlimited)
+  timelapse_width: 0 # Video width (0 for original)
+  timelapse_height: 0 # Video height (0 for original)
+  delete_images_after_timelapse: false # Delete source images after timelapse
+  continuous_timelapse_max_age_hours: 24 # Keep continuous timelapses for N hours (0 unlimited)
+
+# Storage and file management
+storage_settings:
+  output_dir: "./media" # Base directory for images and timelapses
+  log_dir: "./logs" # Directory for log files
+  log_file: "unifi_timelapser.log" # Log filename
+  cleanup_days: 30 # Delete images older than N days (0 to disable)
+  log_cleanup_days: 7 # Delete logs older than N days (0 to disable)
+
+# Operational time and scheduling
+operational_settings:
+  frequency: 300 # Capture frequency in seconds
+  time_start: "00:00" # Daily start time (HH:MM format)
+  time_stop: "00:00" # Daily stop time (00:00-00:00 = 24/7)
+  timezone: "America/Chicago" # Timezone for operations
+  config_reload_interval: 60 # Config file check interval (0 to disable)
+
+# Health monitoring settings
+health_check_settings:
+  health_check_interval: 300 # Health check interval in seconds
+  unhealthy_threshold: 3 # Failures before marking unhealthy
+  http_server_enabled: false # Enable HTTP health endpoint
+  http_server_port: null # Port for health endpoint
+
+api_server_settings:
+  enabled: false # Enable API server
+  api_port: 8080 # API server port
+  gunicorn_workers: 1 # Number of worker processes
+  gunicorn_threads: 1 # Threads per worker
+
+# Web dashboard settings
+web_dashboard_settings:
+  enabled: true # Enable web dashboard
+  host: "0.0.0.0" # Host to bind to
+  port: 9090 # Port for web dashboard (avoiding 5000 and 8080 which may conflict)
+
+# Database settings
+database_settings:
+  enabled: true # Enable database functionality
+  host: "ep-proud-snow-a5mqz6ow-pooler.us-east-2.aws.neon.tech"
+  port: 5432 # Database port
+  database: "timelapser"
+  username: "timelapser_owner"
+  password: "npg_3JV2CxWgRYzm"
+  pool_size: 5 # Connection pool size
+  max_overflow: 10 # Max overflow connections
+  pool_timeout: 30 # Pool timeout in seconds
+  pool_recycle: 3600 # Pool recycle time in seconds
+  auto_migrate: true # Automatically run migrations on startup

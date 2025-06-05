@@ -1,0 +1,978 @@
+{% extends "base.html" %} {% block title %}Dashboard - UniFi
+Timelapser{% endblock %} {% block content %}
+
+<!-- System Overview Cards -->
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+  <!-- Total Cameras -->
+  <div
+    class="bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl shadow-lg text-white p-6"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-blue-100 text-sm font-medium">Total Cameras</p>
+        <p class="text-3xl font-bold">{{ config.total_cameras }}</p>
+      </div>
+      <div class="bg-blue-400 bg-opacity-30 rounded-full p-3">
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Online Cameras -->
+  <div
+    class="bg-gradient-to-r from-green-500 to-green-600 rounded-xl shadow-lg text-white p-6"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-green-100 text-sm font-medium">Online Cameras</p>
+        <p class="text-3xl font-bold" id="online-count">
+          {{ stats.healthy_cameras }}
+        </p>
+      </div>
+      <div class="bg-green-400 bg-opacity-30 rounded-full p-3">
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Total Captures -->
+  <div
+    class="bg-gradient-to-r from-yellow-500 to-yellow-600 rounded-xl shadow-lg text-white p-6"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-yellow-100 text-sm font-medium">Total Captures</p>
+        <p class="text-3xl font-bold">{{ stats.total_captures }}</p>
+      </div>
+      <div class="bg-yellow-400 bg-opacity-30 rounded-full p-3">
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success Rate -->
+  <div
+    class="bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl shadow-lg text-white p-6"
+  >
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-purple-100 text-sm font-medium">Success Rate</p>
+        <p class="text-3xl font-bold">
+          {{ "%.1f"|format(stats.capture_success_rate) }}%
+        </p>
+      </div>
+      <div class="bg-purple-400 bg-opacity-30 rounded-full p-3">
+        <svg
+          class="w-8 h-8"
+          fill="none"
+          stroke="currentColor"
+          viewBox="0 0 24 24"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            stroke-width="2"
+            d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"
+          ></path>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Camera Status Section -->
+<div class="mb-8">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-bold text-gray-900">Camera Status</h2>
+    <button
+      onclick="refreshCameraStatus()"
+      class="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+    >
+      <svg
+        class="w-4 h-4 mr-2"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+        ></path>
+      </svg>
+      Refresh
+    </button>
+  </div>
+
+  {% if cameras %}
+  <div
+    class="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6"
+    id="camera-cards"
+  >
+    {% for camera in cameras %}
+    <div
+      class="bg-white rounded-xl shadow-lg overflow-hidden camera-card"
+      data-camera="{{ camera.name }}"
+    >
+      <!-- Card Header -->
+      <div class="bg-gray-50 px-6 py-4 border-b border-gray-200">
+        <div class="flex items-center justify-between">
+          <h3 class="text-lg font-semibold text-gray-900 flex items-center">
+            {% if camera.status == 'online' %}
+            <svg
+              class="w-5 h-5 text-green-500 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            {% elif camera.status == 'error' %}
+            <svg
+              class="w-5 h-5 text-red-500 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+              ></path>
+            </svg>
+            {% else %}
+            <svg
+              class="w-5 h-5 text-yellow-500 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+              ></path>
+            </svg>
+            {% endif %} {{ camera.name }}
+          </h3>
+          <span
+            class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {% if camera.status == 'online' %}bg-green-100 text-green-800 {% elif camera.status == 'error' %}bg-red-100 text-red-800 {% else %}bg-yellow-100 text-yellow-800{% endif %}"
+          >
+            {{ camera.status.upper() }}
+          </span>
+        </div>
+      </div>
+
+      <!-- Card Body -->
+      <div class="p-6">
+        <!-- Camera Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <p class="text-sm text-gray-500">Last Capture</p>
+            <p class="text-lg font-semibold text-gray-900 last-capture">
+              {{ camera.capture_stats.last_capture_ago }}
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Success Rate</p>
+            <p class="text-lg font-semibold text-gray-900">
+              {{ camera.capture_stats.success_rate }}%
+            </p>
+          </div>
+        </div>
+
+        <!-- Next Capture Countdown (only show when timelapse is running) -->
+        {% if camera.timelapse_state == 'RUNNING' %}
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <div>
+              <p class="text-sm text-gray-500">Next Capture</p>
+              <p
+                class="text-lg font-semibold text-gray-900 countdown-text"
+                data-camera="{{ camera.name }}"
+              >
+                <span class="countdown-time"
+                  >{{ camera.capture_stats.next_capture_in_seconds }}s</span
+                >
+              </p>
+            </div>
+            <div class="countdown-timer-container">
+              <svg
+                width="50"
+                height="50"
+                class="countdown-timer transform -rotate-90"
+                data-camera="{{ camera.name }}"
+                data-interval="{{ camera.capture_stats.capture_interval }}"
+                data-remaining="{{ camera.capture_stats.next_capture_in_seconds }}"
+              >
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="22"
+                  fill="none"
+                  stroke="#e5e7eb"
+                  stroke-width="3"
+                />
+                <circle
+                  cx="25"
+                  cy="25"
+                  r="22"
+                  fill="none"
+                  stroke="#3b82f6"
+                  stroke-width="3"
+                  stroke-dasharray="138.23"
+                  stroke-dashoffset="0"
+                  class="countdown-circle transition-all duration-1000"
+                />
+              </svg>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Additional Stats -->
+        <div class="grid grid-cols-2 gap-4 mb-6">
+          <div>
+            <p class="text-sm text-gray-500">Total Captures</p>
+            <p class="text-lg font-semibold text-gray-900">
+              {{ camera.total_captures }}
+            </p>
+          </div>
+          <div>
+            <p class="text-sm text-gray-500">Failures</p>
+            <p
+              class="text-lg font-semibold {% if camera.consecutive_failures > 2 %}text-red-600{% else %}text-gray-900{% endif %}"
+            >
+              {{ camera.consecutive_failures }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Health Status -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between">
+            <p class="text-sm text-gray-500">Health Status</p>
+            <span
+              class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium {% if camera.capture_stats.is_healthy %}bg-green-100 text-green-800{% else %}bg-red-100 text-red-800{% endif %}"
+            >
+              {% if camera.capture_stats.is_healthy %}Healthy{% else
+              %}Unhealthy{% endif %}
+            </span>
+          </div>
+        </div>
+
+        <!-- Latest Image -->
+        {% if camera.last_image_path %}
+        <div class="mb-6">
+          <p class="text-sm text-gray-500 mb-2">Latest Image</p>
+          <div class="latest-image-container">
+            <img
+              src="/media/{{ camera.last_image_path }}"
+              class="w-full h-32 object-cover rounded-lg shadow-sm latest-image"
+              alt="Latest capture from {{ camera.name }}"
+              onerror="this.style.display='none'; this.nextElementSibling.style.display='block';"
+            />
+            <div
+              class="hidden bg-yellow-50 border border-yellow-200 rounded-lg p-4 text-center"
+            >
+              <svg
+                class="w-8 h-8 text-yellow-400 mx-auto mb-2"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+              </svg>
+              <p class="text-sm text-yellow-800">Image not available</p>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="mb-6">
+          <p class="text-sm text-gray-500 mb-2">Latest Image</p>
+          <div
+            class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center"
+          >
+            <svg
+              class="w-8 h-8 text-blue-400 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+            </svg>
+            <p class="text-sm text-blue-800">No images captured yet</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Latest Timelapse -->
+        {% if camera.latest_timelapse and camera.latest_timelapse.exists %}
+        <div class="mb-6">
+          <p class="text-sm text-gray-500 mb-2">Latest Timelapse</p>
+          <div class="bg-gray-50 rounded-lg p-4">
+            <div class="flex items-center justify-between mb-3">
+              <div class="flex-1 min-w-0">
+                <p class="text-sm font-medium text-gray-900 truncate">
+                  {{ camera.latest_timelapse.filename }}
+                </p>
+                <p class="text-xs text-gray-500">
+                  {{ camera.latest_timelapse.size_mb }} MB • {{
+                  camera.latest_timelapse.age }}
+                </p>
+              </div>
+              <span
+                class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-primary-100 text-primary-800"
+              >
+                {{ camera.latest_timelapse.type }}
+              </span>
+            </div>
+            <div class="flex space-x-2">
+              <a
+                href="/media/{{ camera.latest_timelapse.path }}"
+                target="_blank"
+                class="inline-flex items-center px-3 py-1.5 border border-transparent text-xs font-medium rounded text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                <svg
+                  class="w-3 h-3 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h1m4 0h1m-6-4h.01M15 10h.01M9 14h.01M15 14h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
+                  ></path>
+                </svg>
+                View
+              </a>
+              <a
+                href="/media/{{ camera.latest_timelapse.path }}"
+                download="{{ camera.latest_timelapse.filename }}"
+                class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+              >
+                <svg
+                  class="w-3 h-3 mr-1"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  ></path>
+                </svg>
+                Download
+              </a>
+            </div>
+          </div>
+        </div>
+        {% else %}
+        <div class="mb-6">
+          <p class="text-sm text-gray-500 mb-2">Latest Timelapse</p>
+          <div
+            class="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center"
+          >
+            <svg
+              class="w-8 h-8 text-blue-400 mx-auto mb-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M7 4V2a1 1 0 011-1h8a1 1 0 011 1v2M7 4h10M7 4v8a1 1 0 001 1h8a1 1 0 001-1V4M7 7h10"
+              ></path>
+            </svg>
+            <p class="text-sm text-blue-800">No timelapses generated yet</p>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Error Message -->
+        {% if camera.last_error %}
+        <div class="mb-6">
+          <div class="bg-red-50 border border-red-200 rounded-lg p-4">
+            <div class="flex items-start">
+              <svg
+                class="w-5 h-5 text-red-400 mt-0.5 mr-2 flex-shrink-0"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z"
+                ></path>
+              </svg>
+              <div>
+                <h4 class="text-sm font-medium text-red-800 mb-1">
+                  Last Error
+                </h4>
+                <p
+                  class="text-sm text-red-700 font-mono bg-red-100 p-2 rounded"
+                >
+                  {{ camera.last_error }}
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- Timelapse Controls -->
+        <div class="mb-6">
+          <div class="flex items-center justify-between mb-3">
+            <p class="text-sm text-gray-500">Timelapse Status</p>
+            <span 
+              class="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium timelapse-status-badge"
+              data-camera="{{ camera.name }}"
+              data-state="{{ camera.timelapse_state }}"
+            >
+              {% if camera.timelapse_state == 'RUNNING' %}
+                <svg class="w-3 h-3 mr-1 text-green-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="bg-green-100 text-green-800">RECORDING</span>
+              {% elif camera.timelapse_state == 'PAUSED' %}
+                <svg class="w-3 h-3 mr-1 text-yellow-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="bg-yellow-100 text-yellow-800">PAUSED</span>
+              {% else %}
+                <svg class="w-3 h-3 mr-1 text-gray-600" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"></path>
+                </svg>
+                <span class="bg-gray-100 text-gray-800">STOPPED</span>
+              {% endif %}
+            </span>
+          </div>
+          
+          <!-- Timelapse Info -->
+          <div class="grid grid-cols-2 gap-4 mb-3">
+            <div>
+              <p class="text-xs text-gray-500">Frame Count</p>
+              <p class="text-sm font-semibold text-gray-900 timelapse-frame-count" data-camera="{{ camera.name }}">
+                {{ camera.timelapse_frame_count }}
+              </p>
+            </div>
+            {% if camera.timelapse_started_at %}
+            <div>
+              <p class="text-xs text-gray-500">Started At</p>
+              <p class="text-xs text-gray-700">
+                {{ camera.timelapse_started_at[:16] if camera.timelapse_started_at else '' }}
+              </p>
+            </div>
+            {% endif %}
+          </div>
+          
+          <!-- Control Buttons -->
+          <div class="flex space-x-2">
+            <!-- Start/Resume Button -->
+            <button
+              class="timelapse-control-btn start-resume-btn flex-1 inline-flex justify-center items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors {% if camera.timelapse_state == 'RUNNING' %}bg-gray-300 text-gray-500 cursor-not-allowed{% else %}bg-green-600 hover:bg-green-700 text-white{% endif %}"
+              data-camera="{{ camera.name }}"
+              data-action="{% if camera.timelapse_state == 'PAUSED' %}resume{% else %}start{% endif %}"
+              {% if camera.timelapse_state == 'RUNNING' %}disabled{% endif %}
+            >
+              {% if camera.timelapse_state == 'PAUSED' %}
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                </svg>
+                Resume
+              {% else %}
+                <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                  <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+                </svg>
+                Start
+              {% endif %}
+            </button>
+            
+            <!-- Pause Button -->
+            <button
+              class="timelapse-control-btn pause-btn flex-1 inline-flex justify-center items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors {% if camera.timelapse_state != 'RUNNING' %}bg-gray-300 text-gray-500 cursor-not-allowed{% else %}bg-yellow-600 hover:bg-yellow-700 text-white{% endif %}"
+              data-camera="{{ camera.name }}"
+              data-action="pause"
+              {% if camera.timelapse_state != 'RUNNING' %}disabled{% endif %}
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zM7 8a1 1 0 012 0v4a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v4a1 1 0 102 0V8a1 1 0 00-1-1z" clip-rule="evenodd"></path>
+              </svg>
+              Pause
+            </button>
+            
+            <!-- Stop Button -->
+            <button
+              class="timelapse-control-btn stop-btn flex-1 inline-flex justify-center items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors {% if camera.timelapse_state == 'STOPPED' %}bg-gray-300 text-gray-500 cursor-not-allowed{% else %}bg-red-600 hover:bg-red-700 text-white{% endif %}"
+              data-camera="{{ camera.name }}"
+              data-action="stop"
+              {% if camera.timelapse_state == 'STOPPED' %}disabled{% endif %}
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8 7a1 1 0 012 0v6a1 1 0 11-2 0V7zm4 0a1 1 0 012 0v6a1 1 0 11-2 0V7z" clip-rule="evenodd"></path>
+              </svg>
+              Stop
+            </button>
+            
+            <!-- Reset Button -->
+            <button
+              class="timelapse-control-btn reset-btn inline-flex justify-center items-center px-3 py-1.5 text-xs font-medium rounded-md transition-colors {% if camera.timelapse_state == 'RUNNING' %}bg-gray-300 text-gray-500 cursor-not-allowed{% else %}bg-gray-600 hover:bg-gray-700 text-white{% endif %}"
+              data-camera="{{ camera.name }}"
+              data-action="reset"
+              {% if camera.timelapse_state == 'RUNNING' %}disabled{% endif %}
+            >
+              <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+                <path fill-rule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1zm.008 9.057a1 1 0 011.276.61A5.002 5.002 0 0014.001 13H11a1 1 0 110-2h5a1 1 0 011 1v5a1 1 0 11-2 0v-2.101a7.002 7.002 0 01-11.601-2.566 1 1 0 01.61-1.276z" clip-rule="evenodd"></path>
+              </svg>
+              Reset
+            </button>
+          </div>
+        </div>
+
+        <!-- Action Button -->
+        <div class="pt-4 border-t border-gray-200">
+          <a
+            href="/camera/{{ camera.name }}"
+            class="w-full inline-flex justify-center items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 transition-colors"
+          >
+            <svg
+              class="w-4 h-4 mr-2"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+              ></path>
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+              ></path>
+            </svg>
+            View Details
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="text-center py-12">
+    <svg
+      class="w-16 h-16 text-gray-400 mx-auto mb-4"
+      fill="none"
+      stroke="currentColor"
+      viewBox="0 0 24 24"
+    >
+      <path
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        stroke-width="2"
+        d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"
+      ></path>
+    </svg>
+    <h3 class="text-lg font-medium text-gray-900 mb-2">
+      No cameras configured
+    </h3>
+    <p class="text-gray-500">Get started by configuring your first camera.</p>
+  </div>
+  {% endif %}
+</div>
+
+{% endblock %} {% block extra_scripts %}
+<script>
+  // Timelapse control functionality
+  document.addEventListener('DOMContentLoaded', function() {
+    // Add event listeners to all timelapse control buttons
+    document.querySelectorAll('.timelapse-control-btn').forEach(button => {
+      button.addEventListener('click', handleTimelapseControl);
+    });
+  });
+
+  async function handleTimelapseControl(event) {
+    event.preventDefault();
+    
+    const button = event.currentTarget;
+    const cameraName = button.dataset.camera;
+    const action = button.dataset.action;
+    
+    if (!cameraName || !action) {
+      showNotification('Error: Missing camera or action data', 'error');
+      return;
+    }
+
+    // Disable button and show loading state
+    const originalHTML = button.innerHTML;
+    button.disabled = true;
+    button.innerHTML = `
+      <svg class="animate-spin w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+      </svg>
+      Loading...
+    `;
+
+    try {
+      const response = await fetch(`/api/cameras/${encodeURIComponent(cameraName)}/timelapse/${action}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        }
+      });
+
+      const result = await response.json();
+
+      if (response.ok && result.success) {
+        showNotification(`Timelapse ${action} successful for ${cameraName}`, 'success');
+        
+        // Update UI elements based on the new state
+        updateCameraTimelapseUI(cameraName, result.state, result.frame_count, result.started_at);
+        
+        // Refresh the page after a short delay to show updated states
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } else {
+        throw new Error(result.message || `Failed to ${action} timelapse`);
+      }
+    } catch (error) {
+      console.error('Timelapse control error:', error);
+      showNotification(`Error: ${error.message}`, 'error');
+    } finally {
+      // Restore button state
+      button.disabled = false;
+      button.innerHTML = originalHTML;
+    }
+  }
+
+  function updateCameraTimelapseUI(cameraName, newState, frameCount, startedAt) {
+    try {
+      // Update timelapse state badge
+      const stateBadge = document.querySelector(`.timelapse-state[data-camera="${cameraName}"]`);
+      if (stateBadge) {
+        // Remove existing state classes
+        stateBadge.classList.remove('bg-gray-100', 'text-gray-800', 'bg-green-100', 'text-green-800', 'bg-yellow-100', 'text-yellow-800');
+        
+        // Add new state classes and text
+        switch (newState) {
+          case 'STOPPED':
+            stateBadge.classList.add('bg-gray-100', 'text-gray-800');
+            stateBadge.textContent = 'Stopped';
+            break;
+          case 'RUNNING':
+            stateBadge.classList.add('bg-green-100', 'text-green-800');
+            stateBadge.textContent = 'Running';
+            break;
+          case 'PAUSED':
+            stateBadge.classList.add('bg-yellow-100', 'text-yellow-800');
+            stateBadge.textContent = 'Paused';
+            break;
+        }
+      }
+
+      // Update frame count
+      const frameCountElement = document.querySelector(`.timelapse-frame-count[data-camera="${cameraName}"]`);
+      if (frameCountElement && frameCount !== undefined) {
+        frameCountElement.textContent = frameCount;
+      }
+
+      // Update button states based on new timelapse state
+      updateTimelapseButtons(cameraName, newState);
+    } catch (error) {
+      console.error('Error updating camera timelapse UI:', error);
+    }
+  }
+
+  function updateTimelapseButtons(cameraName, newState) {
+    // Find the camera card more reliably
+    const cameraElements = document.querySelectorAll(`[data-camera="${cameraName}"]`);
+    let cameraCard = null;
+    
+    // Look for the camera card container
+    for (const element of cameraElements) {
+      const card = element.closest('.bg-white');
+      if (card && card.querySelector('.timelapse-control-btn')) {
+        cameraCard = card;
+        break;
+      }
+    }
+    
+    if (!cameraCard) {
+      console.warn(`Could not find camera card for ${cameraName}`);
+      return;
+    }
+
+    const startResumeBtn = cameraCard.querySelector('.start-resume-btn');
+    const pauseBtn = cameraCard.querySelector('.pause-btn');
+    const stopBtn = cameraCard.querySelector('.stop-btn');
+    const resetBtn = cameraCard.querySelector('.reset-btn');
+
+    // Update button states and content based on timelapse state
+    switch (newState) {
+      case 'STOPPED':
+        // Start button enabled, others disabled
+        if (startResumeBtn) {
+          startResumeBtn.disabled = false;
+          startResumeBtn.dataset.action = 'start';
+          startResumeBtn.innerHTML = `
+            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+            </svg>
+            Start
+          `;
+        }
+        if (pauseBtn) pauseBtn.disabled = true;
+        if (stopBtn) stopBtn.disabled = true;
+        if (resetBtn) resetBtn.disabled = false;
+        break;
+        
+      case 'RUNNING':
+        // Pause and stop enabled, start/resume and reset disabled
+        if (startResumeBtn) startResumeBtn.disabled = true;
+        if (pauseBtn) pauseBtn.disabled = false;
+        if (stopBtn) stopBtn.disabled = false;
+        if (resetBtn) resetBtn.disabled = true;
+        break;
+        
+      case 'PAUSED':
+        // Resume, stop, and reset enabled, pause disabled
+        if (startResumeBtn) {
+          startResumeBtn.disabled = false;
+          startResumeBtn.dataset.action = 'resume';
+          startResumeBtn.innerHTML = `
+            <svg class="w-3 h-3 mr-1" fill="currentColor" viewBox="0 0 20 20">
+              <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM9.555 7.168A1 1 0 008 8v4a1 1 0 001.555.832l3-2a1 1 0 000-1.664l-3-2z" clip-rule="evenodd"></path>
+            </svg>
+            Resume
+          `;
+        }
+        if (pauseBtn) pauseBtn.disabled = true;
+        if (stopBtn) stopBtn.disabled = false;
+        if (resetBtn) resetBtn.disabled = false;
+        break;
+    }
+
+    // Update button styling based on enabled/disabled state
+    updateButtonStyling(cameraCard);
+  }
+
+  function updateButtonStyling(cameraCard) {
+    const buttons = cameraCard.querySelectorAll('.timelapse-control-btn');
+    buttons.forEach(button => {
+      if (button.disabled) {
+        button.classList.remove('bg-blue-600', 'hover:bg-blue-700', 'text-white');
+        button.classList.remove('bg-yellow-600', 'hover:bg-yellow-700', 'text-white');
+        button.classList.remove('bg-red-600', 'hover:bg-red-700', 'text-white');
+        button.classList.remove('bg-gray-600', 'hover:bg-gray-700', 'text-white');
+        button.classList.add('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+      } else {
+        button.classList.remove('bg-gray-300', 'text-gray-500', 'cursor-not-allowed');
+        
+        // Apply appropriate colors based on button type
+        if (button.classList.contains('start-resume-btn')) {
+          button.classList.add('bg-green-600', 'hover:bg-green-700', 'text-white');
+        } else if (button.classList.contains('pause-btn')) {
+          button.classList.add('bg-yellow-600', 'hover:bg-yellow-700', 'text-white');
+        } else if (button.classList.contains('stop-btn')) {
+          button.classList.add('bg-red-600', 'hover:bg-red-700', 'text-white');
+        } else if (button.classList.contains('reset-btn')) {
+          button.classList.add('bg-gray-600', 'hover:bg-gray-700', 'text-white');
+        }
+      }
+    });
+  }
+
+  function showNotification(message, type = 'info') {
+    // Create notification element
+    const notification = document.createElement('div');
+    notification.className = `fixed top-4 right-4 z-50 max-w-sm p-4 rounded-lg shadow-lg transition-all duration-300 transform translate-x-full`;
+    
+    // Set colors based on type
+    switch (type) {
+      case 'success':
+        notification.classList.add('bg-green-500', 'text-white');
+        break;
+      case 'error':
+        notification.classList.add('bg-red-500', 'text-white');
+        break;
+      case 'info':
+      default:
+        notification.classList.add('bg-blue-500', 'text-white');
+        break;
+    }
+
+    notification.innerHTML = `
+      <div class="flex items-center">
+        <div class="flex-1">
+          <p class="font-medium">${message}</p>
+        </div>
+        <button class="ml-4 flex-shrink-0" onclick="this.parentElement.parentElement.remove()">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    `;
+
+    document.body.appendChild(notification);
+
+    // Slide in
+    setTimeout(() => {
+      notification.classList.remove('translate-x-full');
+    }, 100);
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+      notification.classList.add('translate-x-full');
+      setTimeout(() => {
+        if (notification.parentNode) {
+          notification.parentNode.removeChild(notification);
+        }
+      }, 300);
+    }, 5000);
+  }
+
+  // Countdown timer functionality (updated for Tailwind)
+  function updateCountdownTimers() {
+    document.querySelectorAll(".countdown-timer").forEach((timer) => {
+      const cameraName = timer.dataset.camera
+      const interval = parseInt(timer.dataset.interval)
+      const remaining = parseInt(timer.dataset.remaining)
+
+      const circle = timer.querySelector(".countdown-circle")
+      const timeElement = document.querySelector(
+        `.countdown-text[data-camera="${cameraName}"] .countdown-time`
+      )
+
+      if (remaining <= 0) {
+        timer.dataset.remaining = interval
+        circle.style.strokeDashoffset = "0"
+        if (timeElement) timeElement.textContent = `${interval}s`
+        return
+      }
+
+      const newRemaining = remaining - 1
+      timer.dataset.remaining = newRemaining
+
+      // Update circle progress
+      const circumference = 2 * Math.PI * 22 // radius = 22
+      const progress = (interval - newRemaining) / interval
+      const dashoffset = circumference * (1 - progress)
+      circle.style.strokeDashoffset = dashoffset
+
+      // Update color based on progress
+      if (progress < 0.5) {
+        circle.style.stroke = "#3b82f6" // blue
+      } else if (progress < 0.8) {
+        circle.style.stroke = "#f59e0b" // yellow
+      } else {
+        circle.style.stroke = "#ef4444" // red
+      }
+
+      // Update text
+      if (timeElement) {
+        timeElement.textContent = `${newRemaining}s`
+      }
+    })
+  }
+
+  // Auto-refresh functionality
+  function refreshCameraStatus() {
+    const button = event?.target
+    if (button) {
+      const originalHTML = button.innerHTML
+      button.innerHTML = `
+        <svg class="animate-spin w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+        </svg>
+        Refreshing...
+      `
+      button.disabled = true
+
+      setTimeout(() => {
+        window.location.reload()
+      }, 500)
+    } else {
+      window.location.reload()
+    }
+  }
+
+  // Initialize timers
+  setInterval(updateCountdownTimers, 1000)
+
+  // Auto-refresh every 2 minutes
+  setInterval(refreshCameraStatus, 120000)
+</script>
+{% endblock %}

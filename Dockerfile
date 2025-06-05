@@ -1,17 +1,17 @@
-# Use an official Python runtime as a parent image
-FROM python:3.9-slim
 
-# Set the working directory in the container
+FROM python:3.13-alpine
+
 WORKDIR /usr/src/app
 
-# Copy the current directory contents into the container at /usr/src/app
-COPY . .
+COPY src/ .
+
+COPY requirements.txt .
 
 # Install ffmpeg and any needed packages specified in requirements.txt
-RUN apt-get update && \
-    apt-get install -y ffmpeg && \
+RUN apt-get update && \\
+    apt-get install -y ffmpeg tzdata && \\
     pip install --no-cache-dir -r requirements.txt
 
 
 # Run the Flask app
-CMD ["gunicorn", "-b", "0.0.0.0:8080", "capture_images:app"]
+CMD ["python", "main.py"]

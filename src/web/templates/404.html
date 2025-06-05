@@ -1,0 +1,26 @@
+{% extends "base.html" %} {% block title %}Page Not Found - UniFi Timelapser{%
+endblock %} {% block content %}
+<div class="row justify-content-center">
+  <div class="col-md-6">
+    <div class="text-center py-5">
+      <i
+        class="bi bi-exclamation-triangle-fill text-warning"
+        style="font-size: 5rem"
+      ></i>
+      <h1 class="mt-4">404 - Page Not Found</h1>
+      <p class="text-muted mb-4">
+        The page you're looking for doesn't exist or has been moved.
+      </p>
+
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/" class="btn btn-primary">
+          <i class="bi bi-house"></i> Go to Dashboard
+        </a>
+        <button class="btn btn-outline-secondary" onclick="history.back()">
+          <i class="bi bi-arrow-left"></i> Go Back
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

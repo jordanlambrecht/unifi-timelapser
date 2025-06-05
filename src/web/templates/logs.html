@@ -1,0 +1,163 @@
+{% extends "base.html" %}
+
+{% block title %}System Logs - UniFi Timelapser{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h1><i class="bi bi-journal-text"></i> System Logs</h1>
+                <p class="text-muted">Recent application logs and events</p>
+            </div>
+            <div>
+                <button class="btn btn-outline-primary" onclick="refreshLogs()">
+                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Recent Log Entries</h5>
+                <div>
+                    <select class="form-select form-select-sm d-inline-block w-auto me-2" id="logLevel" onchange="filterLogs()">
+                        <option value="">All Levels</option>
+                        <option value="ERROR">Error</option>
+                        <option value="WARNING">Warning</option>
+                        <option value="INFO">Info</option>
+                        <option value="DEBUG">Debug</option>
+                    </select>
+                    <button class="btn btn-sm btn-outline-secondary" onclick="downloadLogs()">
+                        <i class="bi bi-download"></i> Download
+                    </button>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                {% if logs %}
+                <div class="log-container" style="height: 600px; overflow-y: auto;">
+                    <table class="table table-sm table-striped mb-0" id="logTable">
+                        <thead class="sticky-top bg-light">
+                            <tr>
+                                <th style="width: 150px;">Timestamp</th>
+                                <th style="width: 80px;">Level</th>
+                                <th style="width: 120px;">Module</th>
+                                <th>Message</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for log_line in logs %}
+                            {% if log_line.strip() %}
+                            <tr class="log-entry" data-log-line="{{ log_line }}">
+                                {% set parts = log_line.split(' - ', 3) %}
+                                {% if parts|length >= 4 %}
+                                <td class="font-monospace small">{{ parts[0] }}</td>
+                                <td>
+                                    {% set level = parts[2] %}
+                                    <span class="badge bg-{{ 'danger' if level == 'ERROR' else 'warning' if level == 'WARNING' else 'info' if level == 'INFO' else 'secondary' }}">
+                                        {{ level }}
+                                    </span>
+                                </td>
+                                <td class="small text-muted">{{ parts[1] }}</td>
+                                <td class="font-monospace small">{{ parts[3] }}</td>
+                                {% else %}
+                                <td colspan="4" class="font-monospace small text-muted">{{ log_line }}</td>
+                                {% endif %}
+                            </tr>
+                            {% endif %}
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-5">
+                    <i class="bi bi-journal-x text-muted" style="font-size: 3rem;"></i>
+                    <p class="text-muted mt-2">No log entries found</p>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Log Detail Modal -->
+<div class="modal fade" id="logDetailModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Log Entry Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <pre id="logDetailContent" class="bg-light p-3 rounded"></pre>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Auto-scroll to bottom on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const logContainer = document.querySelector('.log-container');
+    if (logContainer) {
+        logContainer.scrollTop = logContainer.scrollHeight;
+    }
+    
+    // Make log entries clickable for details
+    document.querySelectorAll('.log-entry').forEach(row => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', function() {
+            const logLine = this.dataset.logLine;
+            showLogDetail(logLine);
+        });
+    });
+});
+
+function refreshLogs() {
+    window.location.reload();
+}
+
+function filterLogs() {
+    const level = document.getElementById('logLevel').value;
+    const rows = document.querySelectorAll('.log-entry');
+    
+    rows.forEach(row => {
+        if (level === '' || row.textContent.includes(level)) {
+            row.style.display = '';
+        } else {
+            row.style.display = 'none';
+        }
+    });
+}
+
+function downloadLogs() {
+    // Create a downloadable text file of all logs
+    const logEntries = Array.from(document.querySelectorAll('.log-entry')).map(row => row.dataset.logLine);
+    const logContent = logEntries.join('\n');
+    
+    const blob = new Blob([logContent], {type: 'text/plain'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `unifi-timelapser-logs-${new Date().toISOString().split('T')[0]}.txt`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function showLogDetail(logLine) {
+    const modal = new bootstrap.Modal(document.getElementById('logDetailModal'));
+    document.getElementById('logDetailContent').textContent = logLine;
+    modal.show();
+}
+
+// Auto-refresh logs every 30 seconds
+setInterval(refreshLogs, 30000);
+</script>
+{% endblock %}
